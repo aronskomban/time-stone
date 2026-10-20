@@ -1,0 +1,11 @@
+node_modules/
+.next/
+.env*
+!.env.example
+!.env.test
+*.log
+coverage/
+.DS_Store
+.sf/
+*.tsbuildinfo
+drizzle-error.txt
