@@ -289,14 +289,25 @@ export async function sendEmployeeCredentialsEmail(
 
 
 async function sendEmail(to: string, subject: string, html: string, devLink: string): Promise<boolean> {
-  const smtpUrl = process.env.SMTP_URL;
+    const smtpUrl = process.env.SMTP_URL?.trim().replace(/^["']|["']$/g, "");
   const from = process.env.EMAIL_FROM;
+
   if (smtpUrl && from) {
-    const transport = nodemailer.createTransport(smtpUrl);
+    const smtp = new URL(smtpUrl);
+
+    const transport = nodemailer.createTransport({
+      host: smtp.hostname,
+      port: Number(smtp.port || (smtp.protocol === "smtps:" ? 465 : 587)),
+      secure: smtp.protocol === "smtps:",
+      auth: {
+        user: decodeURIComponent(smtp.username),
+        pass: decodeURIComponent(smtp.password),
+      },
+    });
+
     await transport.sendMail({ from, to, subject, html });
     return true;
-  }
-  if (!isDevMailMode()) throw new Error("Email delivery is not configured. Set SMTP_URL and EMAIL_FROM.");
+  }if (!isDevMailMode()) throw new Error("Email delivery is not configured. Set SMTP_URL and EMAIL_FROM.");
   console.info(`[Time Stone development email] to=${to} subject=${subject} link=${devLink}`);
   return false;
 }
